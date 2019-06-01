@@ -1,4 +1,4 @@
-(function(root) {
+(function(root,globalName) {
 	function RequestManager() {
 		var currentUrl;
 		Object.defineProperty(this, "currentUrl", {
@@ -27,6 +27,18 @@
 			}
 			return url;
 		};
+		this.intercept = function intercept(){
+			this.interceptDOM();
+			this.interceptXHR();
+			this.interceptFetch();
+			this.interceptSendBeacon();
+		};
+		this.restore = function restore(){
+			this.restoreDOM();
+			this.restoreXHR();
+			this.restoreFetch();
+			this.restoreSendBeacon();
+		}
 	}
     var rmproto = RequestManager.prototype;
     rmproto.whitelistKeys = [];
@@ -94,11 +106,11 @@
 				var element = PIIDATA[key];
 				var combo = key + "=" + element;
 				if (srcurl.indexOf(combo) > -1) {
-					srcurl = srcurl.replace(combo, key + "=XXX");
+					srcurl = srcurl.replace(combo, key + "=X");
 				}
 				combo = encodeURIComponent(combo);
 				if (srcurl.indexOf(combo) > -1) {
-					srcurl = srcurl.replace(combo, encodeURIComponent(key + "=XXX"));
+					srcurl = srcurl.replace(combo, encodeURIComponent(key + "=X"));
 				}
 			}
 		}
@@ -234,5 +246,7 @@
     };
 	//end XHR handling
 	// initialise and make it a global (singleton)
-	window._rqmgr = new RequestManager();
-})(window);
+	//the globalName variable allows to use your own variable as a global
+	globalName = globalName || '_rqmgr';
+	window[globalName] = new RequestManager();
+})(window, '_rqmgr');
