@@ -51,7 +51,7 @@
             var newQSList = {};
             for (var key in currentQS) {
                 if (currentQS.hasOwnProperty(key)) {
-                    if(!!!this.whitelistKeys.indexOf(key)){
+                    if(!!this.whitelistKeys.indexOf(key)){
                         newQSList[key] = currentQS[key];
                     }
                 }
@@ -233,9 +233,13 @@
 			user,
 			password
 		) {
+			// Default value of async is true, sync setting will be deprecated in the  near future, removes the error in devtools
+			if (async === undefined) {
+				async = true;
+			}
 			//check the url
 			if (!!url) {
-				url = that.checkUrl(url);
+				url = that.checkUrl(url);	
 			}
 			//execute the native function
 			that._XHROpen.apply(this, [method, url, async, user, password]);
