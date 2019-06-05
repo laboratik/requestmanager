@@ -49,6 +49,7 @@
 			url = this.parseUri(url);
 		}
 		//create array of qs parameter/value combos
+		if(!!url.query){
 		var qsArray = url.query.split('&');
 
 		//apply the whitelisting on keys
@@ -69,7 +70,9 @@
 		url.qslist = z;
 		//construct the regex to use for sanitizing
 		var qstring = '(' + z.join('|') + ')';
-		url.qsrx = new RegExp(qstring, 'gmi');
+			url.qsrx = new RegExp(qstring, 'gmi');
+		}
+		
 		return url;
 	};
 	//function to parse a url into the different components
@@ -96,22 +99,25 @@
 	};
 	//function removing the qs data from the given url
 	rmproto.sanitizeUrl = function sanitizeUrl(url) {
-		var srcurl = url;
+		var outurl = url;
 		var regx = this.currentUrl.qsrx;
-		//use the earlier created regex in the replace function.
-		// the replace function will execute for every matched key/value pair
-		// and will replace the value with an x
-		var outurl = url.replace(regx, function sanitizeReplace() {
-			var value = arguments[0];
-			value = value.split(/(%3D|=)/);
-			//strip the value, this should be the third part in the array
-			value.length == 3 && value.pop();
-			//add the placeholder
-			value.push('x');
-			//reconstruct the value to use as replacement and return it
-			value = value.join('');
-			return value;
-		});
+		if(!!regx){
+			//use the earlier created regex in the replace function.
+			// the replace function will execute for every matched key/value pair
+			// and will replace the value with an x
+			outurl = url.replace(regx, function sanitizeReplace() {
+				var value = arguments[0];
+				value = value.split(/(%3D|=)/);
+				//strip the value, this should be the third part in the array
+				value.length == 3 && value.pop();
+				//add the placeholder
+				value.push('x');
+				//reconstruct the value to use as replacement and return it
+				value = value.join('');
+				return value;
+			});
+		}
+
 		return outurl;
 	};
 
