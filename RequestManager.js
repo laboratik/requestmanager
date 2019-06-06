@@ -49,30 +49,34 @@
 			url = this.parseUri(url);
 		}
 		//create array of qs parameter/value combos
-		if(!!url.query){
-		var qsArray = url.query.split('&');
+		if (!!url.query) {
+			var qsArray = url.query.split('&');
 
-		//apply the whitelisting on keys
-		if (!!this.whitelistKeys.length) {
-			var newQSList = [];
-			for (var index = 0; index < qsArray.length; index++) {
-				var element = qsArray[index];
-				var key = element.replace(/=.*/, '');
-				if (this.whitelistKeys.indexOf(key) == -1) {
-					newQSList.push(element);
+			//apply the whitelisting on keys
+			if (!!this.whitelistKeys.length) {
+				var newQSList = [];
+				for (var index = 0; index < qsArray.length; index++) {
+					var element = qsArray[index];
+					var key = element.replace(/=.*/, '');
+					if (this.whitelistKeys.indexOf(key) == -1) {
+						newQSList.push(element);
+					}
 				}
+				qsArray = newQSList;
 			}
-			qsArray = newQSList;
+			//create an array containing th filtered qs and their encode equivalents
+			var z = [];
+			if (qsArray.length > 0) {
+				z = [].concat(encodeURIComponent(qsArray.join('&')).split('%26'), qsArray);
+			}
+			//expose the list
+			url.qslist = z;
+			//construct the regex to use for sanitizing
+			var qstring = z.length >0 ? '(' + z.join('|') + ')' : undefined;
+
+			url.qsrx = (!!qstring && qstring != '(|)' && qstring != '()') ? new RegExp(qstring, 'gmi') : undefined;
 		}
-		//create an array containing th filtered qs and their encode equivalents
-		var z = [].concat(encodeURIComponent(qsArray.join('&')).split('%26'), qsArray);
-		//expose the list
-		url.qslist = z;
-		//construct the regex to use for sanitizing
-		var qstring = '(' + z.join('|') + ')';
-			url.qsrx = new RegExp(qstring, 'gmi');
-		}
-		
+
 		return url;
 	};
 	//function to parse a url into the different components
@@ -101,7 +105,7 @@
 	rmproto.sanitizeUrl = function sanitizeUrl(url) {
 		var outurl = url;
 		var regx = this.currentUrl.qsrx;
-		if(!!regx){
+		if (!!regx) {
 			//use the earlier created regex in the replace function.
 			// the replace function will execute for every matched key/value pair
 			// and will replace the value with an x
