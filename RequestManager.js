@@ -48,34 +48,37 @@
 		if (!!url) {
 			url = this.parseUri(url);
 		}
+		var outArray =  urlQSArray = hashArray = [];
 		//create array of qs parameter/value combos
-		if (!!url.query) {
-			var qsArray = url.query.split('&');
+		!!url.query && (urlQSArray = url.query.split('&'));
+		//create array of hash parameter/value combos
+		var hash = !!url.anchor ? url.anchor.split('?')[1] : undefined;
+		!!hash && hash.length > 0 && hash.indexOf('=')>-1 && (hashArray = hash.split('&'));
+		//create a new array with all paramters from qs and hash
+		outArray = [].concat(urlQSArray, hashArray);
 
-			//apply the whitelisting on keys
-			if (!!this.whitelistKeys.length) {
-				var newQSList = [];
-				for (var index = 0; index < qsArray.length; index++) {
-					var element = qsArray[index];
-					var key = element.replace(/=.*/, '');
-					if (this.whitelistKeys.indexOf(key) == -1) {
-						newQSList.push(element);
-					}
+		//apply the whitelisting on keys
+		this.whitelistKeys = this.whitelistKeys || [];
+		var newQSList = [];
+		for (var index = 0; index < outArray.length; index++) {
+			var element = outArray[index];
+			if(!!element && element.indexOf('=')>-1){
+			var key = element.replace(/=.*/, '');
+				if (this.whitelistKeys.indexOf(key) == -1) {
+					newQSList.push(element);
+					//add the encoded equivalent also
+					newQSList.push(encodeURIComponent(element));
 				}
-				qsArray = newQSList;
 			}
-			//create an array containing th filtered qs and their encode equivalents
-			var z = [];
-			if (qsArray.length > 0) {
-				z = [].concat(encodeURIComponent(qsArray.join('&')).split('%26'), qsArray);
-			}
-			//expose the list
-			url.qslist = z;
-			//construct the regex to use for sanitizing
-			var qstring = z.length >0 ? '(' + z.join('|') + ')' : undefined;
-
-			url.qsrx = (!!qstring && qstring != '(|)' && qstring != '()') ? new RegExp(qstring, 'gmi') : undefined;
 		}
+		outArray = newQSList;
+
+		//expose the list
+		url.qslist = !!outArray && outArray.length > 0 ? outArray : undefined;
+		//construct the regex to use for sanitizing
+		var qstring = !!outArray ? '(' + outArray.join('|') + ')' : undefined;
+
+		url.qsrx = !!qstring && qstring != '(|)' && qstring != '()' ? new RegExp(qstring, 'gmi') : undefined;
 
 		return url;
 	};
@@ -105,6 +108,7 @@
 	rmproto.sanitizeUrl = function sanitizeUrl(url) {
 		var outurl = url;
 		var regx = this.currentUrl.qsrx;
+		if(!!!url){return url}
 		if (!!regx) {
 			//use the earlier created regex in the replace function.
 			// the replace function will execute for every matched key/value pair
