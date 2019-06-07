@@ -1,23 +1,3 @@
-console.groupCollapsed('Same Domain tests');
-    _rqmgr.currentUrl = 'https://www.example.com/sub/path';
-
-    console.time('single run');
-    _rqmgr.checkUrl('https://www.example.com/sub/path');
-    console.timeEnd('single run');
-
-    console.time('100 runs');
-    for(var x=0;x<100;x++){
-        _rqmgr.checkUrl('https://www.example.com/sub/path');
-    }
-    console.timeEnd('100 runs');
-    
-    console.time('1000 runs');
-    for(var x=0;x<1000;x++){
-        _rqmgr.checkUrl('https://www.example.com/sub/path');
-    }
-    console.timeEnd('1000 runs')
-
-console.groupEnd('Same Domain tests');
 
 console.groupCollapsed('3P Domain tests');
     console.groupCollapsed('No parameters');
@@ -100,3 +80,24 @@ console.groupCollapsed('3P Domain tests');
     console.timeEnd('1000 runs')
     console.groupEnd('Parameters 1P domainParameters 1P domain + 3P domain');
 console.groupEnd('3P Domain tests');
+
+console.groupCollapsed('Same Domain tests');
+_rqmgr.currentUrl = 'https://www.example.com/sub/path';
+
+console.time('single run');
+_rqmgr.checkUrl('https://www.example.com/sub/path');
+console.timeEnd('single run');
+
+console.time('100 runs');
+for (var x = 0; x < 100; x++) {
+    _rqmgr.checkUrl('https://www.example.com/sub/path');
+}
+console.timeEnd('100 runs');
+
+console.time('1000 runs');
+for (var x = 0; x < 1000; x++) {
+    _rqmgr.checkUrl('https://www.example.com/sub/path');
+}
+console.timeEnd('1000 runs')
+
+console.groupEnd('Same Domain tests');

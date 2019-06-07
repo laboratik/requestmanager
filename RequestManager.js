@@ -9,11 +9,12 @@
 				return this.checkCurrentUrl(url);
 			}
 		});
-		//function to handle the checking of url's for dom elements created with javascript
-		this.checkUrl = function checkUrl(url) {
+		//function to check if url is to be checked
+		//validates if the url is either third party or whitelisted/blacklisted
+		//returns boolean
+		this.validateUrl = function validateUrl(url) {
 			if (!!!url) {
-				//no url provided?
-				return url;
+				return false;
 			}
 			//relative urls are not third parties
 			if (url.indexOf('http') == 0) {
@@ -21,9 +22,17 @@
 				var thisUrlTLD = thisUrlDetails.tld;
 				//check if it is a third party url
 				if ((this.currentUrl.tld != thisUrlTLD && this.whitelistDomains.indexOf(thisUrlTLD) == -1) || this.blacklistDomains.indexOf(thisUrlDetails.host) > -1) {
-					//top level domains do not match... start sanitizing routine
-					url = this.sanitizeUrl(url);
+					//top level domains do not match... should sanitize
+					return true;
 				}
+			}
+			return false;
+		};
+
+		//function to handle the checking of url's for dom elements created with javascript
+		this.checkUrl = function checkUrl(url) {
+			if (this.validateUrl(url)) {
+				url = this.sanitizeUrl(url);
 			}
 			return url;
 		};
@@ -48,12 +57,12 @@
 		if (!!url) {
 			url = this.parseUri(url);
 		}
-		var outArray =  urlQSArray = hashArray = [];
+		var outArray = (urlQSArray = hashArray = []);
 		//create array of qs parameter/value combos
 		!!url.query && (urlQSArray = url.query.split('&'));
 		//create array of hash parameter/value combos
 		var hash = !!url.anchor ? url.anchor.split('?')[1] : undefined;
-		!!hash && hash.length > 0 && hash.indexOf('=')>-1 && (hashArray = hash.split('&'));
+		!!hash && hash.length > 0 && hash.indexOf('=') > -1 && (hashArray = hash.split('&'));
 		//create a new array with all paramters from qs and hash
 		outArray = [].concat(urlQSArray, hashArray);
 
@@ -62,8 +71,8 @@
 		var newQSList = [];
 		for (var index = 0; index < outArray.length; index++) {
 			var element = outArray[index];
-			if(!!element && element.indexOf('=')>-1){
-			var key = element.replace(/=.*/, '');
+			if (!!element && element.indexOf('=') > -1) {
+				var key = element.replace(/=.*/, '');
 				if (this.whitelistKeys.indexOf(key) == -1) {
 					newQSList.push(element);
 					//add the encoded equivalent also
@@ -77,9 +86,7 @@
 		url.qslist = !!outArray && outArray.length > 0 ? outArray : undefined;
 		//construct the regex to use for sanitizing
 		var qstring = !!outArray ? '(' + outArray.join('|') + ')' : undefined;
-
 		url.qsrx = !!qstring && qstring != '(|)' && qstring != '()' ? new RegExp(qstring, 'gmi') : undefined;
-
 		return url;
 	};
 	//function to parse a url into the different components
@@ -108,7 +115,9 @@
 	rmproto.sanitizeUrl = function sanitizeUrl(url) {
 		var outurl = url;
 		var regx = this.currentUrl.qsrx;
-		if(!!!url){return url}
+		if (!!!url) {
+			return url;
+		}
 		if (!!regx) {
 			//use the earlier created regex in the replace function.
 			// the replace function will execute for every matched key/value pair
@@ -217,6 +226,8 @@
 		var that = this;
 		//store the native functions for later
 		rmproto._XHROpen = XMLHttpRequest.prototype.open;
+		rmproto._XHRSend = XMLHttpRequest.prototype.send;
+
 		//instrument the open function to sanitize the url before 'opening'
 		XMLHttpRequest.prototype.open = function interceptOpen(method, url, async, user, password) {
 			// Default value of async is true, sync setting will be deprecated in the  near future, removes the error in devtools
@@ -225,14 +236,30 @@
 			}
 			//check the url
 			if (!!url) {
+				this._originalUrl = url;
 				url = that.checkUrl(url);
 			}
 			//execute the native function
 			that._XHROpen.apply(this, [method, url, async, user, password]);
 		};
+		//instrument the open function to sanitize the url before 'opening'
+		XMLHttpRequest.prototype.send = function interceptSend(body) {
+			var url = this.responseURL || this._originalUrl;
+			//only check string based payload
+			if (!!body && typeof body == 'string' && !!url) {
+				//only for the domains to check
+				if (that.validateUrl(url)) {
+					//check the data
+					body = that.sanitizeUrl(body);
+				}
+			}
+			//execute the native function
+			that._XHRSend.apply(this, [body]);
+		};
 	};
 	rmproto.restoreXHR = function restoreXHR() {
 		!!this._XHROpen && (XMLHttpRequest.prototype.open = this._XHROpen);
+		!!this._XHRSend && (XMLHttpRequest.prototype.send = this._XHRSend);
 	};
 	//end XHR handling
 	// initialise and make it a global (singleton)
