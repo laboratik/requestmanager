@@ -17,11 +17,11 @@
 				return false;
 			}
 			//relative urls are not third parties
-			if (url.indexOf('http') == 0) {
+			if (url.indexOf('http') == 0 && url.indexOf('//') !==-0) {
 				var thisUrlDetails = this.parseUri(url);
 				var thisUrlTLD = thisUrlDetails.tld;
 				//check if it is a third party url
-				if ((this.currentUrl.tld != thisUrlTLD && this.whitelistDomains.indexOf(thisUrlTLD) == -1) || this.blacklistDomains.indexOf(thisUrlDetails.host) > -1) {
+				if ((this.currentUrl.tld != thisUrlTLD && this.whitelistDomains.indexOf(thisUrlDetails.host) == -1) || this.blacklistDomains.indexOf(thisUrlDetails.host) > -1) {
 					//top level domains do not match... should sanitize
 					return true;
 				}
