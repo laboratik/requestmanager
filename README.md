@@ -28,4 +28,5 @@ The following methods/properties are the most usefull:
 #TODO
 
 check if sendBeacon works properly
+check if there is a performance bottleneck somewhere
 

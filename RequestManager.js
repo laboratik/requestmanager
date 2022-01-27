@@ -1,6 +1,7 @@
 (function(root, globalName) {
 	function RequestManager() {
 		var currentUrl;
+		//upon each get or set of the currentUrl property a check should be performed
 		Object.defineProperty(this, 'currentUrl', {
 			get: function() {
 				return this.checkCurrentUrl(document.location.href);
