@@ -25,3 +25,7 @@ The following methods/properties are the most usefull:
 - _rqmgr.intercept(): starts the interception. you need to call this manually as it will not automatically start intercepting
 - _rqmgr.restore(): remove our interceptors and revert back the changes made to the interceptees 
 
+#TODO
+
+check if sendBeacon works properly
+
